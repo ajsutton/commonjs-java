@@ -11,7 +11,6 @@ import static org.junit.Assert.assertThat;
 
 public class CommonJsCompilerTest
 {
-    private static final String SIMPLE_JAVASCRIPT = "'Hello world!';";
 
     private final InMemoryModuleLoader moduleLoader = new InMemoryModuleLoader();
     private final CommonJsCompiler compiler = new CommonJsCompiler(moduleLoader);
@@ -19,19 +18,34 @@ public class CommonJsCompilerTest
     @Test
     public void shouldCompileFileWithNoDependencies() throws Exception
     {
-        moduleLoader.addModule("main", SIMPLE_JAVASCRIPT);
-
-        assertScriptProducesOutput(compiler.compile("main"), "Hello world!");
+        assertSingleScriptProduces("'Hello world!';", "Hello world!");
     }
 
     @Test
     public void shouldBeAbleToAccessModuleName() throws Exception
     {
-        moduleLoader.addModule("main", "'Hello ' + module.id");
-        assertScriptProducesOutput(compiler.compile("main"), "Hello main");
+        assertSingleScriptProduces("'Hello ' + module.id", "Hello main");
     }
 
-    private void assertScriptProducesOutput(final String script, final String expectedOutput) throws ScriptException
+    @Test
+    public void shouldHaveEmptyObjectAsModuleExports() throws Exception
+    {
+        assertSingleScriptProduces("module.exports.constructor === Object && Object.keys(module.exports).length === 0", true);
+    }
+
+    @Test
+    public void shouldMakeModuleExportsAvailableAsExportsVariable() throws Exception
+    {
+        assertSingleScriptProduces("module.exports === exports", true);
+    }
+
+    private void assertSingleScriptProduces(final String script, final Object expectedOutput) throws ScriptException
+    {
+        moduleLoader.addModule("main", script);
+        assertScriptProducesOutput(compiler.compile("main"), expectedOutput);
+    }
+
+    private void assertScriptProducesOutput(final String script, final Object expectedOutput) throws ScriptException
     {
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         final ScriptEngine javascriptEngine = scriptEngineManager.getEngineByMimeType("text/javascript");
