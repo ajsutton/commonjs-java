@@ -48,6 +48,14 @@ var require = (function() {
         }
         if (requestedId.startsWith("./")) {
             return moduleId.substring(0, Math.max(0, moduleId.lastIndexOf('/'))) + '/' + requestedId.substring(2);
+        } else if (requestedId.startsWith("../")) {
+            var moduleIdParts = moduleId.split('/');
+            moduleIdParts.pop();
+            while (requestedId.startsWith("../")) {
+                requestedId = requestedId.substring("../".length);
+                moduleIdParts.pop();
+            }
+            return moduleIdParts.join('/') + requestedId;
         }
         return requestedId;
     }

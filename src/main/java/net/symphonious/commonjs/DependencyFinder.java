@@ -23,9 +23,11 @@ import org.mozilla.javascript.ast.FunctionCall;
 import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.StringLiteral;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 class DependencyFinder
 {
@@ -76,6 +78,18 @@ class DependencyFinder
         if (requestedModule.startsWith("./"))
         {
             return currentModuleId.substring(0, Math.max(0, currentModuleId.lastIndexOf('/'))) + "/" + requestedModule.substring("./".length());
+        }
+        else if (requestedModule.startsWith("../"))
+        {
+            final String[] currentModuleParts = currentModuleId.split("/");
+            int partsToUse = currentModuleParts.length - 1;
+            String moduleSuffix = requestedModule;
+            while (moduleSuffix.startsWith("../"))
+            {
+                partsToUse--;
+                moduleSuffix = moduleSuffix.substring("../".length());
+            }
+            return Arrays.stream(currentModuleParts, 0, Math.min(0, partsToUse)).collect(Collectors.joining("/")) + moduleSuffix;
         }
         return requestedModule;
     }

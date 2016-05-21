@@ -138,6 +138,22 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('deps/dep1').value;", "Hello world!");
     }
 
+    @Test
+    public void shouldResolveRelativeModuleIdsUsingParentDirectory() throws Exception
+    {
+        moduleLoader.addModule("deps/dep1", "exports.value = require('../dep2').value;");
+        moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('deps/dep1').value;", "Hello world!");
+    }
+
+    @Test
+    public void shouldResolveRelativeModuleIdsUsingParentOfParentDirectory() throws Exception
+    {
+        moduleLoader.addModule("deep/deep/deps/dep1", "exports.value = require('../../../dep2').value;");
+        moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('deep/deep/deps/dep1').value;", "Hello world!");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         final String compiledScript = compileScript("exports.result = " + script, dependencies);
