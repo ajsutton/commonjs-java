@@ -68,6 +68,13 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('dep1').value;", "Hello world!", "dep1");
     }
 
+    @Test
+    public void shouldDetectDependenciesAutomatically() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('dep1').value;", "Hello world!");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         moduleLoader.addModule("main", "exports.result = " + script);
