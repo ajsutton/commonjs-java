@@ -53,7 +53,9 @@ class DependencyFinder
         if (functionCall.getTarget() instanceof Name)
         {
             final Name functionName = (Name) functionCall.getTarget();
-            if (functionName.getIdentifier().equals("require") && functionCall.getArguments().size() == 1)
+            if (functionName.getIdentifier().equals("require") &&
+                 functionCall.getArguments().size() == 1 &&
+                 functionName.getDefiningScope() == null)
             {
                 final AstNode argument = functionCall.getArguments().get(0);
                 if (argument instanceof StringLiteral)

@@ -87,6 +87,18 @@ public class CommonJsCompilerTest
     }
 
     @Test
+    public void shouldNotTreatCallsToRequireWithMoreThanOneArgumentAsADependencyRequirement() throws Exception
+    {
+        compileScript("require('dep1', 'dep2')");
+    }
+
+    @Test
+    public void shouldNotTreatCallsToLocalVariableCalledRequireADependency() throws Exception
+    {
+        compileScript("var require = function() {}; var x = require('dep1');");
+    }
+
+    @Test
     public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
     {
         thrown.expect(IllegalArgumentException.class);
@@ -96,10 +108,9 @@ public class CommonJsCompilerTest
 
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
-        moduleLoader.addModule("main", "exports.result = " + script);
+        final String compiledScript = compileScript("exports.result = " + script, dependencies);
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         final ScriptEngine javascriptEngine = scriptEngineManager.getEngineByMimeType("text/javascript");
-        final String compiledScript = compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));
         try
         {
             assertThat("Did not get expected result from compiled script:\n" + compiledScript, javascriptEngine.eval(compiledScript + "require('main').result;"), is(expectedOutput));
@@ -108,6 +119,12 @@ public class CommonJsCompilerTest
         {
             fail("Script generated an error: " + e.getMessage() + "\n" + compiledScript);
         }
+    }
+
+    private String compileScript(final String script, final String... dependencies)
+    {
+        moduleLoader.addModule("main", script);
+        return compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));
     }
 
 }
