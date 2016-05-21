@@ -27,7 +27,7 @@ var require = (function(moduleDefinitions) {
 
     function defineModule(moduleId) {
         var module = { id: moduleId, exports: {} };
-        moduleDefinitions[moduleId].call(undefined, module, function(requestedId) {
+        moduleDefinitions[moduleId].call(undefined, module, module.exports, function(requestedId) {
             return require(resolveModuleId(requestedId, moduleId));
         });
         moduleCache[moduleId] = module.exports;
@@ -55,8 +55,7 @@ var require = (function(moduleDefinitions) {
     return require;
 })({
 {{#modules}}
-    '{{moduleId}}': function(module, require) {
-    var exports = module.exports;
+    '{{moduleId}}': function(module, exports, require) {
     {{{source}}}
     },
 {{/modules}}
