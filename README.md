@@ -1,6 +1,6 @@
 ## commonjs-java
 
-[![Build Status](https://travis-ci.org/ajsutton/commonjs-java.svg?branch=master)](https://travis-ci.org/ajsutton/commonjs-river)
+[![Build Status](https://travis-ci.org/ajsutton/commonjs-java.svg?branch=master)](https://travis-ci.org/ajsutton/commonjs-java)
 
 A java library to compile commonjs modules and their dependencies into a single bundle, ready for
 use in the browser (or any other JavaScript runtime).
