@@ -18,43 +18,47 @@ public class CommonJsCompilerTest
     @Test
     public void shouldCompileFileWithNoDependencies() throws Exception
     {
-        assertSingleScriptProduces("'Hello world!';", "Hello world!");
+        assertScriptProduces("'Hello world!';", "Hello world!");
     }
 
     @Test
     public void shouldBeAbleToAccessModuleName() throws Exception
     {
-        assertSingleScriptProduces("'Hello ' + module.id", "Hello main");
+        assertScriptProduces("'Hello ' + module.id", "Hello main");
     }
 
     @Test
     public void shouldHaveEmptyObjectAsModuleExports() throws Exception
     {
-        assertSingleScriptProduces("module.exports.constructor === Object && Object.keys(module.exports).length === 0", true);
+        assertScriptProduces("module.exports.constructor === Object && Object.keys(module.exports).length === 0", true);
     }
 
     @Test
     public void shouldMakeModuleExportsAvailableAsExportsVariable() throws Exception
     {
-        assertSingleScriptProduces("module.exports === exports", true);
+        assertScriptProduces("module.exports === exports", true);
     }
 
     @Test
     public void shouldProvideARequireFunction() throws Exception
     {
-        assertSingleScriptProduces("typeof require === 'function'", true);
+        assertScriptProduces("typeof require === 'function'", true);
     }
 
-    private void assertSingleScriptProduces(final String script, final Object expectedOutput) throws ScriptException
+    @Test
+    public void shouldLoadRequiredDependencies() throws Exception
     {
-        moduleLoader.addModule("main", script);
-        assertScriptProducesOutput(compiler.compile("main"), expectedOutput);
+        moduleLoader.addModule("dep1", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('dep1').value;", "Hello world!", "dep1");
     }
 
-    private void assertScriptProducesOutput(final String script, final Object expectedOutput) throws ScriptException
+    private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
+        moduleLoader.addModule("main", "exports.result = " + script);
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         final ScriptEngine javascriptEngine = scriptEngineManager.getEngineByMimeType("text/javascript");
-        assertThat(javascriptEngine.eval(script), is(expectedOutput));
+        final String compiledScript = compiler.compile("main", dependencies);
+        assertThat(javascriptEngine.eval(compiledScript + "require('main').result;"), is(expectedOutput));
     }
+
 }

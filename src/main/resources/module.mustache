@@ -1,4 +1,27 @@
-var module = { id: '{{moduleId}}', exports: {} };
-var exports = module.exports;
-var require = function() {};
-{{{source}}}
+var require = (function() {
+    var moduleCache = {};
+    var moduleDefinitions = {
+        {{#modules}}
+            '{{moduleId}}': function(module, require) {
+                var exports = module.exports;
+                {{{source}}}
+            },
+        {{/modules}}
+    };
+    function require(moduleId) {
+        if (moduleCache[moduleId]) {
+            return moduleCache[moduleId];
+        }
+        return defineModule(moduleId);
+    }
+
+    function defineModule(moduleId) {
+        var module = { id: moduleId, exports: {} };
+        moduleDefinitions[moduleId](module, require);
+        moduleCache[moduleId] = module.exports;
+        return module.exports;
+    }
+
+    return require;
+})();
+require('{{mainModuleId}}');
