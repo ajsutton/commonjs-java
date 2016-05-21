@@ -24,6 +24,13 @@ public class CommonJsCompilerTest
         assertScriptProducesOutput(compiler.compile("main"), "Hello world!");
     }
 
+    @Test
+    public void shouldBeAbleToAccessModuleName() throws Exception
+    {
+        moduleLoader.addModule("main", "'Hello ' + module.id");
+        assertScriptProducesOutput(compiler.compile("main"), "Hello main");
+    }
+
     private void assertScriptProducesOutput(final String script, final String expectedOutput) throws ScriptException
     {
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
