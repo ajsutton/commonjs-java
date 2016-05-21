@@ -43,12 +43,17 @@ public class CommonJsCompiler
                                                                                 dependencyFinder.findDependencies(moduleInfo).stream()
                                                                                                 .map(this::createModuleInfo)))
                                            .toArray(ModuleInfo[]::new);
-        moduleTemplate.execute(out, new BundleInfo(modules));
+        moduleTemplate.execute(out, new BundleInfo(dependencies, modules));
         return out.toString();
     }
 
     private ModuleInfo createModuleInfo(final String moduleId)
     {
-        return new ModuleInfo(moduleId, moduleLoader.loadModule(moduleId));
+        final String source = moduleLoader.loadModule(moduleId);
+        if (source == null)
+        {
+            throw new IllegalArgumentException("Failed to load module: " + moduleId);
+        }
+        return new ModuleInfo(moduleId, source);
     }
 }

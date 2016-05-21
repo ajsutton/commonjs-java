@@ -15,7 +15,9 @@
  */
 package net.symphonious.commonjs;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -24,9 +26,12 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class CommonJsCompilerTest
 {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private final InMemoryModuleLoader moduleLoader = new InMemoryModuleLoader();
     private final CommonJsCompiler compiler = new CommonJsCompiler(moduleLoader);
@@ -75,13 +80,34 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('dep1').value;", "Hello world!");
     }
 
+    @Test
+    public void shouldNotDieWhenUserCallsRequireWithNoArguments() throws Exception
+    {
+        assertScriptProduces("require();", null);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
+    {
+        thrown.expect(IllegalArgumentException.class);
+
+        compiler.compile("main");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         moduleLoader.addModule("main", "exports.result = " + script);
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         final ScriptEngine javascriptEngine = scriptEngineManager.getEngineByMimeType("text/javascript");
         final String compiledScript = compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));
-        assertThat(javascriptEngine.eval(compiledScript + "require('main').result;"), is(expectedOutput));
+        try
+        {
+            assertThat("Did not get expected result from compiled script:\n" + compiledScript, javascriptEngine.eval(compiledScript + "require('main').result;"), is(expectedOutput));
+        }
+        catch (final ScriptException e)
+        {
+            fail("Script generated an error: " + e.getMessage() + "\n" + compiledScript);
+        }
     }
 
 }

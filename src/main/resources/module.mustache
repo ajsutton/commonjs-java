@@ -25,6 +25,9 @@ var require = (function() {
         {{/modules}}
     };
     function require(moduleId) {
+        if (moduleId === undefined || moduleId === null) {
+            return undefined;
+        }
         if (moduleCache[moduleId]) {
             return moduleCache[moduleId];
         }
@@ -41,6 +44,6 @@ var require = (function() {
     return require;
 })();
 
-{{#modules}}
-    require('{{moduleId}}');
-{{/modules}}
+{{#requestedModules}}
+    require('{{.}}');
+{{/requestedModules}}

@@ -17,11 +17,18 @@ package net.symphonious.commonjs;
 
 class BundleInfo
 {
+    private final String[] requestedModules;
     private final ModuleInfo[] modules;
 
-    public BundleInfo(final ModuleInfo... modules)
+    public BundleInfo(final String[] requestedModules, final ModuleInfo... modules)
     {
+        this.requestedModules = requestedModules;
         this.modules = modules;
+    }
+
+    public String[] getRequestedModules()
+    {
+        return requestedModules;
     }
 
     public ModuleInfo[] getModules()
