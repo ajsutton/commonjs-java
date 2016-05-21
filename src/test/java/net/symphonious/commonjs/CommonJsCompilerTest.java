@@ -154,6 +154,13 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('deep/deep/deps/dep1').value;", "Hello world!");
     }
 
+    @Test
+    public void shouldBeAbleToAssignToModuleExports() throws Exception
+    {
+        moduleLoader.addModule("dep1", "module.exports = 'Hello world!';");
+        assertScriptProduces("require('dep1');", "Hello world!");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         final String compiledScript = compileScript("exports.result = " + script, dependencies);
