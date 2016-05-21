@@ -109,7 +109,7 @@ public class CommonJsCompilerTest
     }
 
     @Test
-    public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
+    public void shouldThrowExceptionWhenRequestedModuleIsNotFound() throws Exception
     {
         thrown.expect(IllegalArgumentException.class);
 
@@ -128,18 +128,6 @@ public class CommonJsCompilerTest
     public void shouldNotDieWhenUserCallsRequireWithNoArguments() throws Exception
     {
         assertScriptProduces("require();", null);
-    }
-
-    @Test
-    public void shouldNotTreatCallsToRequireWithMoreThanOneArgumentAsADependencyRequirement() throws Exception
-    {
-        compileScript("require('dep1', 'dep2')");
-    }
-
-    @Test
-    public void shouldNotTreatCallsToLocalVariableCalledRequireADependency() throws Exception
-    {
-        compileScript("var require = function() {}; var x = require('dep1');");
     }
 
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException

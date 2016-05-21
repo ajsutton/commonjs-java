@@ -17,10 +17,14 @@ package net.symphonious.commonjs;
 
 import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.IRFactory;
-import org.mozilla.javascript.ast.*;
+import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.AstRoot;
+import org.mozilla.javascript.ast.FunctionCall;
+import org.mozilla.javascript.ast.Name;
+import org.mozilla.javascript.ast.StringLiteral;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 
 class DependencyFinder
@@ -35,7 +39,7 @@ class DependencyFinder
 
     public Collection<String> findDependencies(final ModuleInfo moduleInfo)
     {
-        final Collection<String> dependentModuleIds = new ArrayList<>();
+        final Collection<String> dependentModuleIds = new HashSet<>();
         final IRFactory irFactory = new IRFactory(environs);
         final AstRoot astRoot = irFactory.parse(moduleInfo.getSource(), moduleInfo.getModuleId(), 0);
         astRoot.visit(node -> {
