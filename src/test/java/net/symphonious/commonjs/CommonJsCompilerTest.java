@@ -39,6 +39,12 @@ public class CommonJsCompilerTest
         assertSingleScriptProduces("module.exports === exports", true);
     }
 
+    @Test
+    public void shouldProvideARequireFunction() throws Exception
+    {
+        assertSingleScriptProduces("typeof require === 'function'", true);
+    }
+
     private void assertSingleScriptProduces(final String script, final Object expectedOutput) throws ScriptException
     {
         moduleLoader.addModule("main", script);
