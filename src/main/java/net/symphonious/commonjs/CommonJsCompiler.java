@@ -21,11 +21,14 @@ import com.github.mustachejava.Mustache;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class CommonJsCompiler
 {
@@ -43,8 +46,9 @@ public class CommonJsCompiler
         final Mustache moduleTemplate = mustacheFactory.compile("module.mustache");
         final Writer out = new StringWriter();
 
-        final Collection<ModuleInfo> requiredModules = Stream.of(dependencies).map(this::createModuleInfo).collect(toList());
-        requiredModules.addAll(findDependencies(requiredModules));
+        final Function<String, ModuleInfo> moduleInfoBuilder = cachingModuleInfoBuilder();
+        final Collection<ModuleInfo> requiredModules = Stream.of(dependencies).map(moduleInfoBuilder).collect(toSet());
+        requiredModules.addAll(findDependencies(moduleInfoBuilder, requiredModules));
 
 
         final ModuleInfo[] modules = requiredModules.stream().toArray(ModuleInfo[]::new);
@@ -52,16 +56,22 @@ public class CommonJsCompiler
         return out.toString();
     }
 
-    private List<ModuleInfo> findDependencies(final Collection<ModuleInfo> requiredModules)
+    private List<ModuleInfo> findDependencies(final Function<String, ModuleInfo> moduleInfoBuilder, final Collection<ModuleInfo> requiredModules)
     {
         final List<ModuleInfo> additionalModules = requiredModules.stream()
-                                          .flatMap(module -> dependencyFinder.findDependencies(module).stream().map(this::createModuleInfo))
+                                          .flatMap(module -> dependencyFinder.findDependencies(module).stream().map(moduleInfoBuilder))
                                           .collect(Collectors.toList());
         if (!additionalModules.isEmpty())
         {
-            additionalModules.addAll(findDependencies(additionalModules));
+            additionalModules.addAll(findDependencies(moduleInfoBuilder, additionalModules));
         }
         return additionalModules;
+    }
+
+    private Function<String, ModuleInfo> cachingModuleInfoBuilder()
+    {
+        final Map<String, ModuleInfo> cache = new HashMap<>();
+        return moduleId -> cache.computeIfAbsent(moduleId, this::createModuleInfo);
     }
 
     private ModuleInfo createModuleInfo(final String moduleId)

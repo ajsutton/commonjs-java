@@ -90,6 +90,25 @@ public class CommonJsCompilerTest
     }
 
     @Test
+    public void shouldNotLoadTheSameDependencyMultipleTimes() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value = 'Hello world!'");
+        final String compiledScript = compileScript("require('dep1').value || require('dep1');");
+        assertThat("Should only have included the contents of dep1 once.\n" + compiledScript,
+         compiledScript.indexOf("Hello world!"), is(compiledScript.lastIndexOf("Hello world!")));
+    }
+
+    @Test
+    public void shouldNotLoadTheSameDependencyMultipleTimesWhenRequiredByDifferentFiles() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value = require('dep2').value;");
+        moduleLoader.addModule("dep2", "exports.value = 'Hello world!'");
+        final String compiledScript = compileScript("require('dep1').value || require('dep2');");
+        assertThat("Should only have included the contents of dep1 once.\n" + compiledScript,
+         compiledScript.indexOf("Hello world!"), is(compiledScript.lastIndexOf("Hello world!")));
+    }
+
+    @Test
     public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
     {
         thrown.expect(IllegalArgumentException.class);
