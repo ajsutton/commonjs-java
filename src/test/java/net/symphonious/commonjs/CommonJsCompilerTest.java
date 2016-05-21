@@ -82,6 +82,14 @@ public class CommonJsCompilerTest
     }
 
     @Test
+    public void shouldDetectTransitiveDependencies() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value = require('dep2').value;");
+        moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('dep1').value;", "Hello world!");
+    }
+
+    @Test
     public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
     {
         thrown.expect(IllegalArgumentException.class);

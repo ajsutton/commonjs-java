@@ -20,7 +20,12 @@ import com.github.mustachejava.Mustache;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 public class CommonJsCompiler
 {
@@ -38,13 +43,25 @@ public class CommonJsCompiler
         final Mustache moduleTemplate = mustacheFactory.compile("module.mustache");
         final Writer out = new StringWriter();
 
-        final ModuleInfo[] modules = Stream.of(dependencies).map(this::createModuleInfo)
-                                           .flatMap(moduleInfo -> Stream.concat(Stream.of(moduleInfo),
-                                                                                dependencyFinder.findDependencies(moduleInfo).stream()
-                                                                                                .map(this::createModuleInfo)))
-                                           .toArray(ModuleInfo[]::new);
+        final Collection<ModuleInfo> requiredModules = Stream.of(dependencies).map(this::createModuleInfo).collect(toList());
+        requiredModules.addAll(findDependencies(requiredModules));
+
+
+        final ModuleInfo[] modules = requiredModules.stream().toArray(ModuleInfo[]::new);
         moduleTemplate.execute(out, new BundleInfo(dependencies, modules));
         return out.toString();
+    }
+
+    private List<ModuleInfo> findDependencies(final Collection<ModuleInfo> requiredModules)
+    {
+        final List<ModuleInfo> additionalModules = requiredModules.stream()
+                                          .flatMap(module -> dependencyFinder.findDependencies(module).stream().map(this::createModuleInfo))
+                                          .collect(Collectors.toList());
+        if (!additionalModules.isEmpty())
+        {
+            additionalModules.addAll(findDependencies(additionalModules));
+        }
+        return additionalModules;
     }
 
     private ModuleInfo createModuleInfo(final String moduleId)
