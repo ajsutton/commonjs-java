@@ -45,14 +45,14 @@ class DependencyFinder
         astRoot.visit(node -> {
             if (node instanceof FunctionCall)
             {
-                getDependentModuleId((FunctionCall) node).ifPresent(dependentModuleIds::add);
+                getDependentModuleId((FunctionCall) node, moduleInfo.getModuleId()).ifPresent(dependentModuleIds::add);
             }
             return true;
         });
         return dependentModuleIds;
     }
 
-    public Optional<String> getDependentModuleId(final FunctionCall functionCall)
+    public Optional<String> getDependentModuleId(final FunctionCall functionCall, final String currentModuleId)
     {
         if (functionCall.getTarget() instanceof Name)
         {
@@ -64,10 +64,19 @@ class DependencyFinder
                 final AstNode argument = functionCall.getArguments().get(0);
                 if (argument instanceof StringLiteral)
                 {
-                    return Optional.of(((StringLiteral) argument).getValue());
+                    return Optional.of(resolveModuleId(((StringLiteral) argument).getValue(), currentModuleId));
                 }
             }
         }
         return Optional.empty();
+    }
+
+    private String resolveModuleId(final String requestedModule, final String currentModuleId)
+    {
+        if (requestedModule.startsWith("./"))
+        {
+            return currentModuleId.substring(0, Math.max(0, currentModuleId.lastIndexOf('/'))) + "/" + requestedModule.substring("./".length());
+        }
+        return requestedModule;
     }
 }

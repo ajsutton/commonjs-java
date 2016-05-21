@@ -130,6 +130,14 @@ public class CommonJsCompilerTest
         assertScriptProduces("require();", null);
     }
 
+    @Test
+    public void shouldResolveRelativeModuleIds() throws Exception
+    {
+        moduleLoader.addModule("deps/dep1", "exports.value = require('./dep2').value;");
+        moduleLoader.addModule("deps/dep2", "exports.value = 'Hello world!';");
+        assertScriptProduces("require('deps/dep1').value;", "Hello world!");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         final String compiledScript = compileScript("exports.result = " + script, dependencies);
