@@ -1,6 +1,6 @@
 ## commonjs-java
 
-A java library to compile commonjs module and their dependencies into a single bundle, ready for
+A java library to compile commonjs modules and their dependencies into a single bundle, ready for
 use in the browser (or any other JavaScript runtime).
 
 ### Why?
