@@ -24,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.stream.Stream;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -81,6 +82,22 @@ public class CommonJsCompilerTest
     }
 
     @Test
+    public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
+    {
+        thrown.expect(IllegalArgumentException.class);
+
+        compiler.compile("main");
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenRequiredDependencyIsNotFound() throws Exception
+    {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(containsString("dep1"));
+        compileScript("require('dep1');");
+    }
+
+    @Test
     public void shouldNotDieWhenUserCallsRequireWithNoArguments() throws Exception
     {
         assertScriptProduces("require();", null);
@@ -96,14 +113,6 @@ public class CommonJsCompilerTest
     public void shouldNotTreatCallsToLocalVariableCalledRequireADependency() throws Exception
     {
         compileScript("var require = function() {}; var x = require('dep1');");
-    }
-
-    @Test
-    public void shouldThrowExceptionWhenRequestedDependencyIsNotFound() throws Exception
-    {
-        thrown.expect(IllegalArgumentException.class);
-
-        compiler.compile("main");
     }
 
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
