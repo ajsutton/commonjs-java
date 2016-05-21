@@ -26,6 +26,7 @@ public class CommonJsCompiler
 {
     private final ModuleLoader moduleLoader;
     private DefaultMustacheFactory mustacheFactory = new DefaultMustacheFactory();
+    private Mustache javascriptTemplate = mustacheFactory.compile("bundle.js.mustache");
 
     public CommonJsCompiler(final ModuleLoader moduleLoader)
     {
@@ -34,13 +35,11 @@ public class CommonJsCompiler
 
     public String compile(final String... dependencies)
     {
-        final Mustache moduleTemplate = mustacheFactory.compile("module.mustache");
         final ModuleSet modules = new ModuleSet(moduleLoader);
         Stream.of(dependencies).forEach(modules::addModule);
 
-
         final Writer out = new StringWriter();
-        moduleTemplate.execute(out, new BundleInfo(dependencies, modules.getModules()));
+        javascriptTemplate.execute(out, new BundleInfo(dependencies, modules.getModules()));
         return out.toString();
     }
 }
