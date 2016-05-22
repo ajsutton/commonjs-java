@@ -51,11 +51,22 @@ public class CommonJsCompiler
      */
     public String compile(final String... moduleIds)
     {
+        final Writer out = new StringWriter();
+        compile(out, moduleIds);
+        return out.toString();
+    }
+
+    /**
+     * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file.
+     *
+     * @param out the writer to use to output the compiled JavaScript.
+     * @param moduleIds the module IDs for the modules to load.
+     */
+    public void compile(final Writer out, final String... moduleIds)
+    {
         final ModuleSet modules = new ModuleSet(moduleLoader);
         Stream.of(moduleIds).forEach(modules::addModule);
 
-        final Writer out = new StringWriter();
         javascriptTemplate.execute(out, new BundleInfo(moduleIds, modules.getModules()));
-        return out.toString();
     }
 }
