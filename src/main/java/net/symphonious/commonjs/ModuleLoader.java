@@ -18,6 +18,7 @@ package net.symphonious.commonjs;
 /**
  * A ModuleLoader is used to map between a module ID and the actual JavaScript source for that module.
  */
+@FunctionalInterface
 public interface ModuleLoader
 {
     /**
