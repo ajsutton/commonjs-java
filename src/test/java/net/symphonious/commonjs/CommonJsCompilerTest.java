@@ -22,6 +22,7 @@ import org.junit.rules.ExpectedException;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.StringWriter;
 import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -40,45 +41,45 @@ public class CommonJsCompilerTest
     @Test
     public void shouldCompileFileWithNoDependencies() throws Exception
     {
-        assertScriptProduces("'Hello world!';", "Hello world!");
+        assertScriptProduces("print('Hello world!');", "Hello world!");
     }
 
     @Test
     public void shouldBeAbleToAccessModuleName() throws Exception
     {
-        assertScriptProduces("'Hello ' + module.id", "Hello main");
+        assertScriptProduces("print('Hello ' + module.id);", "Hello main");
     }
 
     @Test
     public void shouldHaveEmptyObjectAsModuleExports() throws Exception
     {
-        assertScriptProduces("module.exports.constructor === Object && Object.keys(module.exports).length === 0", true);
+        assertScriptProduces("print(module.exports.constructor === Object && Object.keys(module.exports).length === 0);", true);
     }
 
     @Test
     public void shouldMakeModuleExportsAvailableAsExportsVariable() throws Exception
     {
-        assertScriptProduces("module.exports === exports", true);
+        assertScriptProduces("print(module.exports === exports);", true);
     }
 
     @Test
     public void shouldProvideARequireFunction() throws Exception
     {
-        assertScriptProduces("typeof require === 'function'", true);
+        assertScriptProduces("print(typeof require === 'function');", true);
     }
 
     @Test
     public void shouldLoadRequiredDependencies() throws Exception
     {
         moduleLoader.addModule("dep1", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('dep1').value;", "Hello world!", "dep1");
+        assertScriptProduces("print(require('dep1').value);", "Hello world!", "dep1");
     }
 
     @Test
     public void shouldDetectDependenciesAutomatically() throws Exception
     {
         moduleLoader.addModule("dep1", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('dep1').value;", "Hello world!");
+        assertScriptProduces("print(require('dep1').value);", "Hello world!");
     }
 
     @Test
@@ -86,7 +87,7 @@ public class CommonJsCompilerTest
     {
         moduleLoader.addModule("dep1", "exports.value = require('dep2').value;");
         moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('dep1').value;", "Hello world!");
+        assertScriptProduces("print(require('dep1').value);", "Hello world!");
     }
 
     @Test
@@ -127,7 +128,7 @@ public class CommonJsCompilerTest
     @Test
     public void shouldNotDieWhenUserCallsRequireWithNoArguments() throws Exception
     {
-        assertScriptProduces("require();", null);
+        assertScriptProduces("require(); print('OK');", "OK");
     }
 
     @Test
@@ -135,7 +136,7 @@ public class CommonJsCompilerTest
     {
         moduleLoader.addModule("deps/dep1", "exports.value = require('./dep2').value;");
         moduleLoader.addModule("deps/dep2", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('deps/dep1').value;", "Hello world!");
+        assertScriptProduces("print(require('deps/dep1').value);", "Hello world!");
     }
 
     @Test
@@ -143,7 +144,7 @@ public class CommonJsCompilerTest
     {
         moduleLoader.addModule("deps/dep1", "exports.value = require('../dep2').value;");
         moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('deps/dep1').value;", "Hello world!");
+        assertScriptProduces("print(require('deps/dep1').value);", "Hello world!");
     }
 
     @Test
@@ -151,14 +152,14 @@ public class CommonJsCompilerTest
     {
         moduleLoader.addModule("deep/deep/deps/dep1", "exports.value = require('../../../dep2').value;");
         moduleLoader.addModule("dep2", "exports.value = 'Hello world!';");
-        assertScriptProduces("require('deep/deep/deps/dep1').value;", "Hello world!");
+        assertScriptProduces("print(require('deep/deep/deps/dep1').value);", "Hello world!");
     }
 
     @Test
     public void shouldBeAbleToAssignToModuleExports() throws Exception
     {
         moduleLoader.addModule("dep1", "module.exports = 'Hello world!';");
-        assertScriptProduces("require('dep1');", "Hello world!");
+        assertScriptProduces("print(require('dep1'));", "Hello world!");
     }
 
     @Test
@@ -166,17 +167,20 @@ public class CommonJsCompilerTest
     {
         moduleLoader.addModule("dep1", "exports.value1 = 'A'; require('dep2'); exports.value2 = 'B';");
         moduleLoader.addModule("dep2", "exports.value = require('dep1').value1;");
-        assertScriptProduces("require('dep2').value;", "A");
+        assertScriptProduces("print(require('dep2').value);", "A");
     }
 
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws Exception
     {
-        final String compiledScript = compileScript("exports.result = " + script, dependencies);
+        final String compiledScript = compileScript(script, dependencies);
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         final ScriptEngine javascriptEngine = scriptEngineManager.getEngineByMimeType("text/javascript");
+        final StringWriter out = new StringWriter();
+        javascriptEngine.getContext().setWriter(out);
         try
         {
-            assertThat("Did not get expected result from compiled script:\n" + compiledScript, javascriptEngine.eval(compiledScript + "require('main').result;"), is(expectedOutput));
+            javascriptEngine.eval(compiledScript);
+            assertThat("Did not get expected result from compiled script:\n" + compiledScript, out.toString(), is(expectedOutput + "\n"));
         }
         catch (final ScriptException e)
         {

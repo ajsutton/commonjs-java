@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 }}
-var require = (function(moduleDefinitions) {
+(function(moduleDefinitions) {
     var moduleCache = {};
     function require(moduleId) {
         if (moduleId === undefined || moduleId === null) {
@@ -53,15 +53,13 @@ var require = (function(moduleDefinitions) {
         return requestedId;
     }
 
-    return require;
+    {{#requestedModules}}
+        require('{{.}}');
+    {{/requestedModules}}
 })({
-{{#modules}}
-    '{{moduleId}}': function(module, exports, require) {
-    {{{source}}}
-    },
-{{/modules}}
+    {{#modules}}
+        '{{moduleId}}': function(module, exports, require) {
+            {{{source}}}
+        },
+    {{/modules}}
 });
-
-{{#requestedModules}}
-    require('{{.}}');
-{{/requestedModules}}
