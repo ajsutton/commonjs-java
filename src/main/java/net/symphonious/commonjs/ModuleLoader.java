@@ -15,7 +15,16 @@
  */
 package net.symphonious.commonjs;
 
+/**
+ * A ModuleLoader is used to map between a module ID and the actual JavaScript source for that module.
+ */
 public interface ModuleLoader
 {
+    /**
+     * Load the source code for the module {@literal moduleId}.  {@literal moduleId} is always a top-level CommonJS module ID (i.e. it never starts with ./ or ../).
+     *
+     * @param moduleId the top-level CommonJS module ID for the module to load.
+     * @return the JavaScript source for the requested module or {@literal null} if it does not exist.
+     */
     String loadModule(String moduleId);
 }
