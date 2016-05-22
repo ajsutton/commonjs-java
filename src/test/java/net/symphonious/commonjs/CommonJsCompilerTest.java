@@ -161,6 +161,14 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('dep1');", "Hello world!");
     }
 
+    @Test
+    public void shouldGetAtLeastThePropertiesAlreadyAddedToExportsWhenThereIsACircularDependency() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value1 = 'A'; require('dep2'); exports.value2 = 'B';");
+        moduleLoader.addModule("dep2", "exports.value = require('dep1').value1;");
+        assertScriptProduces("require('dep2').value;", "A");
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
     {
         final String compiledScript = compileScript("exports.result = " + script, dependencies);
