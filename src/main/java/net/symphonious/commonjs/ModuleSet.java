@@ -15,6 +15,7 @@
  */
 package net.symphonious.commonjs;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,13 +30,16 @@ class ModuleSet
         this.moduleLoader = moduleLoader;
     }
 
-    public void addModule(final String moduleId)
+    public void addModule(final String moduleId) throws IOException
     {
         if (!modules.containsKey(moduleId))
         {
             final ModuleInfo module = createModuleInfo(moduleId);
             modules.put(moduleId, module);
-            dependencyFinder.findDependencies(module).forEach(this::addModule);
+            for (final String dependency : dependencyFinder.findDependencies(module))
+            {
+                addModule(dependency);
+            }
         }
     }
 
@@ -44,7 +48,7 @@ class ModuleSet
         return modules.values().stream().toArray(ModuleInfo[]::new);
     }
 
-    private ModuleInfo createModuleInfo(final String moduleId)
+    private ModuleInfo createModuleInfo(final String moduleId) throws IOException
     {
         final String source = moduleLoader.loadModule(moduleId);
         if (source == null)

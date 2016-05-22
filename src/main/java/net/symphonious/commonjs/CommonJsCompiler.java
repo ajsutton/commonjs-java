@@ -18,9 +18,9 @@ package net.symphonious.commonjs;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.stream.Stream;
 
 /**
  * A CommonJS compiler - given a set of module IDs, it will combine them and all their dependencies into a single JavaScript file that can be shipped to the browser.
@@ -48,8 +48,9 @@ public class CommonJsCompiler
      *
      * @param moduleIds the module IDs for the modules to load.
      * @return a String of JavaScript that combines the requested modules plus their transitive dependencies.
+     * @throws IOException if an error occurs while loading a module.
      */
-    public String compile(final String... moduleIds)
+    public String compile(final String... moduleIds) throws IOException
     {
         final Writer out = new StringWriter();
         compile(out, moduleIds);
@@ -61,11 +62,15 @@ public class CommonJsCompiler
      *
      * @param out the writer to use to output the compiled JavaScript.
      * @param moduleIds the module IDs for the modules to load.
+     * @throws IOException if an error occurs while loading a module.
      */
-    public void compile(final Writer out, final String... moduleIds)
+    public void compile(final Writer out, final String... moduleIds) throws IOException
     {
         final ModuleSet modules = new ModuleSet(moduleLoader);
-        Stream.of(moduleIds).forEach(modules::addModule);
+        for (final String moduleId : moduleIds)
+        {
+            modules.addModule(moduleId);
+        }
 
         javascriptTemplate.execute(out, new BundleInfo(moduleIds, modules.getModules()));
     }

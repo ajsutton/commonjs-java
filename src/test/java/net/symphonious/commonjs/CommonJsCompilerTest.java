@@ -169,7 +169,7 @@ public class CommonJsCompilerTest
         assertScriptProduces("require('dep2').value;", "A");
     }
 
-    private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws ScriptException
+    private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws Exception
     {
         final String compiledScript = compileScript("exports.result = " + script, dependencies);
         final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
@@ -184,7 +184,7 @@ public class CommonJsCompilerTest
         }
     }
 
-    private String compileScript(final String script, final String... dependencies)
+    private String compileScript(final String script, final String... dependencies) throws Exception
     {
         moduleLoader.addModule("main", script);
         return compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));

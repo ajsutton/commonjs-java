@@ -15,6 +15,8 @@
  */
 package net.symphonious.commonjs;
 
+import java.io.IOException;
+
 /**
  * A ModuleLoader is used to map between a module ID and the actual JavaScript source for that module.
  */
@@ -26,6 +28,7 @@ public interface ModuleLoader
      *
      * @param moduleId the top-level CommonJS module ID for the module to load.
      * @return the JavaScript source for the requested module or {@literal null} if it does not exist.
+     * @throws IOException if an error occurs while loading a module.
      */
-    String loadModule(String moduleId);
+    String loadModule(String moduleId) throws IOException;
 }
