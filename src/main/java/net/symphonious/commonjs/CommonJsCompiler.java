@@ -15,23 +15,22 @@
  */
 package net.symphonious.commonjs;
 
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A CommonJS compiler - given a set of module IDs, it will combine them and all their dependencies into a single JavaScript file that can be shipped to the browser.
- *
  * <p>An implementation of {@link ModuleLoader} must be provided that when given an module ID, returns the source code for that module or <code>null</code> if the module does not exist.</p>
  */
 public class CommonJsCompiler
 {
     private final ModuleLoader moduleLoader;
-    private DefaultMustacheFactory mustacheFactory = new DefaultMustacheFactory();
-    private Mustache javascriptTemplate = mustacheFactory.compile("bundle.js.mustache");
 
     /**
      * Create a new CommonJsCompiler with the supplied {@link ModuleLoader}.
@@ -60,7 +59,7 @@ public class CommonJsCompiler
     /**
      * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file.
      *
-     * @param out the writer to use to output the compiled JavaScript.
+     * @param out       the writer to use to output the compiled JavaScript.
      * @param moduleIds the module IDs for the modules to load.
      * @throws IOException if an error occurs while loading a module.
      */
@@ -72,6 +71,23 @@ public class CommonJsCompiler
             modules.addModule(moduleId);
         }
 
-        javascriptTemplate.execute(out, new BundleInfo(moduleIds, modules.getModules()));
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("machinery.js"), StandardCharsets.UTF_8)))
+        {
+            final char[] buf = new char[256];
+            for (int read = in.read(buf, 0, buf.length); read >= 0; read = in.read(buf, 0, buf.length))
+            {
+                out.write(buf, 0, read);
+            }
+        }
+
+        out.write("(");
+        out.write(Stream.of(modules.getModules())
+                   .map(moduleInfo -> "'" + moduleInfo.getModuleId() + "': function(module, exports, require) {\n" + moduleInfo.getSource() + "\n}")
+                   .collect(Collectors.joining(",", "{", "}")));
+        out.write(", ");
+        out.write(Stream.of(moduleIds)
+                   .map(id -> "'" + id + "'")
+                   .collect(Collectors.joining(",", "[", "]")));
+        out.write(");");
     }
 }
