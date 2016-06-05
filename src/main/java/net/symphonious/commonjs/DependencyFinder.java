@@ -77,7 +77,15 @@ class DependencyFinder
     {
         if (requestedModule.startsWith("./"))
         {
-            return currentModuleId.substring(0, Math.max(0, currentModuleId.lastIndexOf('/'))) + "/" + requestedModule.substring("./".length());
+            final String requestedRelativePath = requestedModule.substring("./".length());
+            if (currentModuleId.contains("/"))
+            {
+                return currentModuleId.substring(0, Math.max(0, currentModuleId.lastIndexOf('/'))) + "/" + requestedRelativePath;
+            }
+            else
+            {
+                return requestedRelativePath;
+            }
         }
         else if (requestedModule.startsWith("../"))
         {
@@ -89,7 +97,10 @@ class DependencyFinder
                 partsToUse--;
                 moduleSuffix = moduleSuffix.substring("../".length());
             }
-            return Arrays.stream(currentModuleParts, 0, Math.min(0, partsToUse)).collect(Collectors.joining("/")) + moduleSuffix;
+            final String baseDir = Arrays.stream(currentModuleParts, 0, Math.max(0, partsToUse)).collect(Collectors.joining("/"));
+            return baseDir.isEmpty()
+                    ? moduleSuffix
+                    : baseDir + "/" + moduleSuffix;
         }
         return requestedModule;
     }
