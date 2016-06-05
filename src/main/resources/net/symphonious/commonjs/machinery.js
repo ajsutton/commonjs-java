@@ -25,7 +25,12 @@
             return undefined;
         }
         if (requestedId.startsWith("./")) {
-            return moduleId.substring(0, Math.max(0, moduleId.lastIndexOf('/'))) + '/' + requestedId.substring(2);
+            var relativePath = requestedId.substring(2);
+            if (moduleId.indexOf('/') > 0) {
+                return moduleId.substring(0, Math.max(0, moduleId.lastIndexOf('/'))) + '/' + relativePath;
+            } else {
+                return relativePath;
+            }
         } else if (requestedId.startsWith("../")) {
             var moduleIdParts = moduleId.split('/');
             moduleIdParts.pop();

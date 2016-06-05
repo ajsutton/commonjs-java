@@ -140,6 +140,13 @@ public class CommonJsCompilerTest
     }
 
     @Test
+    public void shouldResolveRelativeModuleIdsFromRoot() throws Exception
+    {
+        moduleLoader.addModule("dep1", "exports.value = 'Hello world!';");
+        assertScriptProduces("print(require('./dep1').value);", "Hello world!");
+    }
+
+    @Test
     public void shouldResolveRelativeModuleIdsUsingParentDirectory() throws Exception
     {
         moduleLoader.addModule("deps/dep1", "exports.value = require('../dep2').value;");
