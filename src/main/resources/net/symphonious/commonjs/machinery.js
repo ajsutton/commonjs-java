@@ -24,17 +24,17 @@
         if (requestedId === null || requestedId === undefined) {
             return undefined;
         }
-        if (requestedId.startsWith("./")) {
+        if (requestedId.substr(0, 2) == "./") {
             var relativePath = requestedId.substring(2);
             if (moduleId.indexOf('/') > 0) {
                 return moduleId.substring(0, Math.max(0, moduleId.lastIndexOf('/'))) + '/' + relativePath;
             } else {
                 return relativePath;
             }
-        } else if (requestedId.startsWith("../")) {
+        } else if (requestedId.substr(0, 3) == "../") {
             var moduleIdParts = moduleId.split('/');
             moduleIdParts.pop();
-            while (requestedId.startsWith("../")) {
+            while (requestedId.substr(0, 3) == "../") {
                 requestedId = requestedId.substring("../".length);
                 moduleIdParts.pop();
             }
