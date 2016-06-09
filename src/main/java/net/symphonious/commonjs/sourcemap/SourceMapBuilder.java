@@ -19,7 +19,6 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 public class SourceMapBuilder
 {
@@ -35,21 +34,34 @@ public class SourceMapBuilder
         sources.add(fileName);
         sourcesContent.add(source);
 
-        final StringTokenizer tokenizer = new StringTokenizer(source, "\r\n");
-        int line = 0;
-        while (tokenizer.hasMoreTokens())
+        int lineNumber = 0;
+        boolean lastCharWasLineEnding = true;
+        for (int i = 0; i < source.length(); i++)
         {
-            tokenizer.nextToken();
-            final int sourceIndex = sources.size() - 1;
-            Base64VLQ.encode(mappings, 0); // Column 0 in generated output
-            Base64VLQ.encode(mappings, sourceIndex - lastSourceIndex); // source file index
-            Base64VLQ.encode(mappings, line - lastSourceLine); // Starting line in source file
-            Base64VLQ.encode(mappings, 0); // Column 0 in source file
-            lastSourceIndex = sourceIndex;
-            lastSourceLine = line;
-            mappings.append(";");
-            line++;
+            final char c = source.charAt(i);
+            lastCharWasLineEnding = (c == '\r' || c == '\n');
+            if (lastCharWasLineEnding)
+            {
+                appendLineMapping(lineNumber);
+                lineNumber++;
+            }
         }
+        if (!lastCharWasLineEnding)
+        {
+            appendLineMapping(lineNumber);
+        }
+    }
+
+    private void appendLineMapping(final int lineNumber)
+    {
+        final int sourceIndex = sources.size() - 1;
+        Base64VLQ.encode(mappings, 0); // Column 0 in generated output
+        Base64VLQ.encode(mappings, sourceIndex - lastSourceIndex); // source file index
+        Base64VLQ.encode(mappings, lineNumber - lastSourceLine); // Starting line in source file
+        Base64VLQ.encode(mappings, 0); // Column 0 in source file
+        lastSourceIndex = sourceIndex;
+        lastSourceLine = lineNumber;
+        mappings.append(";");
     }
 
     public void skipLine()

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"unused", "MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal"})
-public class SourceMap
+class SourceMap
 {
     private final int version = 3;
     private final List<String> sources;
@@ -29,7 +29,6 @@ public class SourceMap
 
     public SourceMap(final List<String> sources, final List<String> sourcesContent, final String mappings)
     {
-
         this.sources = sources;
         this.sourcesContent = sourcesContent;
         this.mappings = mappings;

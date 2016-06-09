@@ -87,18 +87,13 @@ public class CommonJsCompiler
 
         try (BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("machinery.js"), StandardCharsets.UTF_8)))
         {
-            final char[] buf = new char[256];
-            for (int read = in.read(buf, 0, buf.length); read >= 0; read = in.read(buf, 0, buf.length))
+            for (int c = in.read(); c >= 0; c = in.read())
             {
-                for (int i = 0; i < read; i++)
+                if (c == '\n')
                 {
-                    final char c = buf[i];
-                    if (c == '\r' || c == '\n')
-                    {
-                        sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
-                    }
+                    sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
                 }
-                out.write(buf, 0, read);
+                out.write(c);
             }
         }
 
