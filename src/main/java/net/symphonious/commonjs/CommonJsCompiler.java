@@ -15,12 +15,15 @@
  */
 package net.symphonious.commonjs;
 
+import net.symphonious.commonjs.sourcemap.SourceMapBuilder;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,6 +68,17 @@ public class CommonJsCompiler
      */
     public void compile(final Writer out, final String... moduleIds) throws IOException
     {
+        compile(out, Optional.empty(), moduleIds);
+    }
+
+    public void compile(final Writer sourceOut, final Writer sourceMapOut, final String... moduleIds) throws IOException
+    {
+        compile(sourceOut, Optional.of(sourceMapOut), moduleIds);
+    }
+
+    private void compile(final Writer out, final Optional<Writer> sourceMapWriter, final String... moduleIds) throws IOException
+    {
+        final Optional<SourceMapBuilder> sourceMapBuilder = sourceMapWriter.map(writer -> new SourceMapBuilder());
         final ModuleSet modules = new ModuleSet(moduleLoader);
         for (final String moduleId : moduleIds)
         {
@@ -76,18 +90,37 @@ public class CommonJsCompiler
             final char[] buf = new char[256];
             for (int read = in.read(buf, 0, buf.length); read >= 0; read = in.read(buf, 0, buf.length))
             {
+                for (int i = 0; i < read; i++)
+                {
+                    final char c = buf[i];
+                    if (c == '\r' || c == '\n')
+                    {
+                        sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
+                    }
+                }
                 out.write(buf, 0, read);
             }
         }
 
         out.write("(");
         out.write(Stream.of(modules.getModules())
-                   .map(moduleInfo -> "'" + moduleInfo.getModuleId() + "': function(module, exports, require) {\n" + moduleInfo.getSource() + "\n}")
+                   .map(moduleInfo -> {
+                       sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
+                       sourceMapBuilder.ifPresent(builder -> builder.appendModule(moduleInfo.getModuleId(), moduleInfo.getSource()));
+                       return "'" + moduleInfo.getModuleId() + "': function(module, exports, require) {\n" +
+                              moduleInfo.getSource() +
+                              "\n}";
+                   })
                    .collect(Collectors.joining(",", "{", "}")));
         out.write(", ");
         out.write(Stream.of(moduleIds)
                    .map(id -> "'" + id + "'")
                    .collect(Collectors.joining(",", "[", "]")));
-        out.write(");");
+        out.write(");\n");
+        if (sourceMapBuilder.isPresent())
+        {
+            sourceMapWriter.get().append(sourceMapBuilder.get().generateSourceMap());
+        }
+        out.write("//# sourceMappingURL=test.js.map");
     }
 }

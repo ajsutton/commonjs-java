@@ -177,6 +177,19 @@ public class CommonJsCompilerTest
         assertScriptProduces("print(require('dep2').value);", "A");
     }
 
+    @Test
+    public void shouldOutputSourceMap() throws Exception
+    {
+        moduleLoader.addModule("main", "print('Hello world!');");
+        final StringWriter sourceMap = new StringWriter();
+        compiler.compile(new StringWriter(), sourceMap, "main");
+        assertThat(sourceMap.toString(), is("{\"version\":3," +
+                                            "\"sources\":[\"main.js\"]," +
+                                            "\"sourcesContent\":[\"print('Hello world!');\"]," +
+                                            "\"names\":[]," +
+                                            "\"mappings\":\"A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;AAAA;\"}"));
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws Exception
     {
         final String compiledScript = compileScript(script, dependencies);
@@ -200,5 +213,4 @@ public class CommonJsCompilerTest
         moduleLoader.addModule("main", script);
         return compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));
     }
-
 }
