@@ -66,17 +66,26 @@ public class CommonJsCompiler
      * @param moduleIds the module IDs for the modules to load.
      * @throws IOException if an error occurs while loading a module.
      */
-    public void compile(final Writer out, final String... moduleIds) throws IOException
+    public void compile(final Appendable out, final String... moduleIds) throws IOException
     {
         compile(out, Optional.empty(), moduleIds);
     }
 
-    public void compile(final Writer sourceOut, final Writer sourceMapOut, final String... moduleIds) throws IOException
+    /**
+     * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file,
+     * creating a source map that includes the original sources.
+     *
+     * @param sourceOut appendable to write the combined JavaScript to.
+     * @param sourceMapOut appendable to write the sourcemap to.
+     * @param moduleIds the module IDs for the modules to load.
+     * @throws IOException if an error occurs while loading a module or writing the output.
+     */
+    public void compile(final Appendable sourceOut, final Appendable sourceMapOut, final String... moduleIds) throws IOException
     {
         compile(sourceOut, Optional.of(sourceMapOut), moduleIds);
     }
 
-    private void compile(final Writer out, final Optional<Writer> sourceMapWriter, final String... moduleIds) throws IOException
+    private void compile(final Appendable out, final Optional<Appendable> sourceMapWriter, final String... moduleIds) throws IOException
     {
         final Optional<SourceMapBuilder> sourceMapBuilder = sourceMapWriter.map(writer -> new SourceMapBuilder());
         final ModuleSet modules = new ModuleSet(moduleLoader);
@@ -93,12 +102,12 @@ public class CommonJsCompiler
                 {
                     sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
                 }
-                out.write(c);
+                out.append((char)c);
             }
         }
 
-        out.write("(");
-        out.write(Stream.of(modules.getModules())
+        out.append("(");
+        out.append(Stream.of(modules.getModules())
                    .map(moduleInfo -> {
                        sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
                        sourceMapBuilder.ifPresent(builder -> builder.appendModule(moduleInfo.getModuleId(), moduleInfo.getSource()));
@@ -107,15 +116,15 @@ public class CommonJsCompiler
                               "\n}";
                    })
                    .collect(Collectors.joining(",", "{", "}")));
-        out.write(", ");
-        out.write(Stream.of(moduleIds)
+        out.append(", ");
+        out.append(Stream.of(moduleIds)
                    .map(id -> "'" + id + "'")
                    .collect(Collectors.joining(",", "[", "]")));
-        out.write(");\n");
+        out.append(");\n");
         if (sourceMapBuilder.isPresent())
         {
             sourceMapWriter.get().append(sourceMapBuilder.get().generateSourceMap());
         }
-        out.write("//# sourceMappingURL=test.js.map");
+        out.append("//# sourceMappingURL=test.js.map");
     }
 }
