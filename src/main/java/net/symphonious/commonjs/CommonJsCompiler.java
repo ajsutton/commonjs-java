@@ -125,6 +125,5 @@ public class CommonJsCompiler
         {
             sourceMapWriter.get().append(sourceMapBuilder.get().generateSourceMap());
         }
-        out.append("//# sourceMappingURL=test.js.map");
     }
 }
