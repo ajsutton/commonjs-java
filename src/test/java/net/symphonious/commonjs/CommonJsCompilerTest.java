@@ -181,9 +181,8 @@ public class CommonJsCompilerTest
     public void shouldOutputSourceMap() throws Exception
     {
         moduleLoader.addModule("main", "print('Hello world!');");
-        final StringWriter sourceMap = new StringWriter();
-        compiler.compile(new StringWriter(), sourceMap, "main");
-        assertThat(sourceMap.toString(), is("{\"version\":3," +
+        final String sourceMap = compiler.compile("main").getSourceMap();
+        assertThat(sourceMap, is("{\"version\":3," +
                                             "\"sources\":[\"main.js\"]," +
                                             "\"sourcesContent\":[\"print('Hello world!');\"]," +
                                             "\"names\":[]," +
@@ -211,6 +210,6 @@ public class CommonJsCompilerTest
     private String compileScript(final String script, final String... dependencies) throws Exception
     {
         moduleLoader.addModule("main", script);
-        return compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new));
+        return compiler.compile(Stream.concat(Stream.of("main"), Stream.of(dependencies)).toArray(String[]::new)).getJavaScript();
     }
 }

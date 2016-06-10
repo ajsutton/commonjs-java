@@ -21,9 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,49 +43,18 @@ public class CommonJsCompiler
         this.moduleLoader = moduleLoader;
     }
 
-    /**
-     * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file.
-     *
-     * @param moduleIds the module IDs for the modules to load.
-     * @return a String of JavaScript that combines the requested modules plus their transitive dependencies.
-     * @throws IOException if an error occurs while loading a module.
-     */
-    public String compile(final String... moduleIds) throws IOException
-    {
-        final Writer out = new StringWriter();
-        compile(out, moduleIds);
-        return out.toString();
-    }
 
     /**
      * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file.
      *
-     * @param out       the writer to use to output the compiled JavaScript.
      * @param moduleIds the module IDs for the modules to load.
+     * @return a CompilationResult containing a String of JavaScript that combines the requested modules plus their transitive dependencies along with the sourcemap for the JavaScript.
      * @throws IOException if an error occurs while loading a module.
      */
-    public void compile(final Appendable out, final String... moduleIds) throws IOException
+    public CompilationResult compile(final String... moduleIds) throws IOException
     {
-        compile(out, Optional.empty(), moduleIds);
-    }
-
-    /**
-     * Load a set of modules, combined with their dependencies (transitively) and combine them all into a single JavaScript file,
-     * creating a source map that includes the original sources.
-     *
-     * @param sourceOut appendable to write the combined JavaScript to.
-     * @param sourceMapOut appendable to write the sourcemap to.
-     * @param moduleIds the module IDs for the modules to load.
-     * @throws IOException if an error occurs while loading a module or writing the output.
-     */
-    public void compile(final Appendable sourceOut, final Appendable sourceMapOut, final String... moduleIds) throws IOException
-    {
-        compile(sourceOut, Optional.of(sourceMapOut), moduleIds);
-    }
-
-    private void compile(final Appendable out, final Optional<Appendable> sourceMapWriter, final String... moduleIds) throws IOException
-    {
-        final Optional<SourceMapBuilder> sourceMapBuilder = sourceMapWriter.map(writer -> new SourceMapBuilder());
+        final StringWriter out = new StringWriter();
+        final SourceMapBuilder sourceMapBuilder = new SourceMapBuilder();
         final ModuleSet modules = new ModuleSet(moduleLoader);
         for (final String moduleId : moduleIds)
         {
@@ -100,7 +67,7 @@ public class CommonJsCompiler
             {
                 if (c == '\n')
                 {
-                    sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
+                    sourceMapBuilder.skipLine();
                 }
                 out.append((char)c);
             }
@@ -109,8 +76,8 @@ public class CommonJsCompiler
         out.append("(");
         out.append(Stream.of(modules.getModules())
                    .map(moduleInfo -> {
-                       sourceMapBuilder.ifPresent(SourceMapBuilder::skipLine);
-                       sourceMapBuilder.ifPresent(builder -> builder.appendModule(moduleInfo.getModuleId(), moduleInfo.getSource()));
+                       sourceMapBuilder.skipLine();
+                       sourceMapBuilder.appendModule(moduleInfo.getModuleId(), moduleInfo.getSource());
                        return "'" + moduleInfo.getModuleId() + "': function(module, exports, require) {\n" +
                               moduleInfo.getSource() +
                               "\n}";
@@ -121,9 +88,6 @@ public class CommonJsCompiler
                    .map(id -> "'" + id + "'")
                    .collect(Collectors.joining(",", "[", "]")));
         out.append(");\n");
-        if (sourceMapBuilder.isPresent())
-        {
-            sourceMapWriter.get().append(sourceMapBuilder.get().generateSourceMap());
-        }
+        return new CompilationResult(out.toString(), sourceMapBuilder.generateSourceMap());
     }
 }
