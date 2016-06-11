@@ -72,7 +72,7 @@ public class SourceMapBuilderTest
         generator.appendModule("file2", file2);
         generator.skipLine();
         generator.appendModule("file3", file3);
-        assertThat(getSourceMap().getAsJsonPrimitive("mappings").getAsString(), is("A;A;A;AAAA;AACA;A;ACDA;AACA;A;ACDA;AACA;"));
+        assertThat(getSourceMap().getAsJsonPrimitive("mappings").getAsString(), is("A;A;A;AAAA;AACA;AACA;A;ACFA;AACA;AACA;A;ACFA;AACA;"));
     }
 
     private JsonObject getSourceMap()

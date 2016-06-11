@@ -35,21 +35,16 @@ public class SourceMapBuilder
         sourcesContent.add(source);
 
         int lineNumber = 0;
-        boolean lastCharWasLineEnding = true;
         for (int i = 0; i < source.length(); i++)
         {
             final char c = source.charAt(i);
-            lastCharWasLineEnding = (c == '\r' || c == '\n');
-            if (lastCharWasLineEnding)
+            if (c == '\r' || c == '\n')
             {
                 appendLineMapping(lineNumber);
                 lineNumber++;
             }
         }
-        if (!lastCharWasLineEnding)
-        {
-            appendLineMapping(lineNumber);
-        }
+        appendLineMapping(lineNumber);
     }
 
     private void appendLineMapping(final int lineNumber)

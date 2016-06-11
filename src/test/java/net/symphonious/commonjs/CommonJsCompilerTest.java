@@ -189,6 +189,20 @@ public class CommonJsCompilerTest
                                             "\"mappings\":\"A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;AAAA;\"}"));
     }
 
+    @Test
+    public void shouldOutputSourceMapForBlankLineAtEndOfFile() throws Exception
+    {
+        moduleLoader.addModule("dep1", "var a = 'file1';\n");
+        moduleLoader.addModule("main", "print('Hello world!');\n" +
+                                       "require('dep1');\n");
+        final String sourceMap = compiler.compile("main").getSourceMap();
+        assertThat(sourceMap, is("{\"version\":3," +
+                                 "\"sources\":[\"main.js\",\"dep1.js\"]," +
+                                 "\"sourcesContent\":[\"print('Hello world!');\\nrequire('dep1');\\n\",\"var a = 'file1';\\n\"]," +
+                                 "\"names\":[]," +
+                                 "\"mappings\":\"A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;AAAA;AACA;AACA;A;ACFA;AACA;\"}"));
+    }
+
     private void assertScriptProduces(final String script, final Object expectedOutput, final String... dependencies) throws Exception
     {
         final String compiledScript = compileScript(script, dependencies);
