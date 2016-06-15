@@ -61,7 +61,7 @@ public class CommonJsCompiler
             modules.addModule(moduleId);
         }
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("machinery.js"), StandardCharsets.UTF_8)))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(CommonJsCompiler.class.getResourceAsStream("machinery.js"), StandardCharsets.UTF_8)))
         {
             for (int c = in.read(); c >= 0; c = in.read())
             {
